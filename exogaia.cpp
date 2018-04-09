@@ -251,7 +251,6 @@ vector <double> update_environment(vector <double> &environment, int num_nutrien
       nutrient_trickle[j] -= cur*geological_links[j][l];
       
     }
-//cout << endl;
 	      	      
   }
 
@@ -413,7 +412,7 @@ int main(int argc, char **argv) {
     double species_nutrient_avg;
     double species_biomass_avg;
     int nutrient_available;
-    const double abiotic_scaling = 0.015;//0.02;
+    const double abiotic_scaling = 0.015; // microbe sensitivity to temperature
     double satisfaction;
     double factor_i;
     microbe temp_mutant;
@@ -431,7 +430,7 @@ int main(int argc, char **argv) {
 
     
     // VARIABLES FOR KEEPING TRACK OF TIME
-    int timestep_length = total_population; // timestep weighted by total population
+    int timestep_length = total_population; // timestep iterations determined by total population
     int number_gens = 0;
     int timestep_counter = 0;
     int max_timesteps = 50*pow(10,4);
@@ -484,7 +483,7 @@ int main(int argc, char **argv) {
 
 
       abiotic_trickle = update_abiotic(environment, num_nutrients, node_abiotic, abiotic_env, abiotic_T);
-      abiotic_T += abiotic_trickle; //- a_outflux + a_influx; 
+      abiotic_T += abiotic_trickle; 
       nutrient_trickle = update_environment(environment, num_nutrients, percentage_outflow, geological_links, influx_nodes);
       for (int j = 0; j < num_nutrients; j++){
 
@@ -495,7 +494,7 @@ int main(int argc, char **argv) {
 	abiotic_trickle = 0;
 	
        
-	if (abiotic_T >= 1000 && abiotic_T <= 1050) {
+	if (abiotic_T >= 1000 && abiotic_T <= 1050) { // seeding window
 		for (int k = 0; k < num_nutrients; k++){
 			if (environment[k] > 1000) {
 				 non_ideal = 0; 
@@ -529,7 +528,7 @@ int main(int argc, char **argv) {
 	while (suit_metab == 0) {
 		species[0].genome = floor(drand48()*pow(2,genome_length));
 		for (int q = 0; q < num_nutrients; q++){
-			if (n_g_interacts[species[0].genome][q] > 0 && environment[q] > 1000) {
+			if (n_g_interacts[species[0].genome][q] > 0 && environment[q] > 1000) {  // food source available?
 				suit_metab = 1;
 			}
 		}
@@ -598,8 +597,8 @@ int main(int argc, char **argv) {
 		    if (n_g_interacts[species[j].genome][l+num_nutrients] > 0) { waste_out = l+1; }
 		  }
 
-		  nutrient_genome << " " << eat_in; //int(n_genome.to_ulong()); 
-		  waste_genome << " " << waste_out; //int(w_genome.to_ulong()); 
+		  nutrient_genome << " " << eat_in;
+		  waste_genome << " " << waste_out; 
             }
 
             pop_data << endl;
