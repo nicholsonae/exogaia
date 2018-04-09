@@ -406,7 +406,6 @@ int main(int argc, char **argv) {
     //***** SPECIES VARIABLES ********
     vector < microbe > species; 
     int total_population = initial_population;
-    int number_core_species = 0;
     int average_biomass;
     int i_biomass;
     double species_nutrient_avg;
@@ -547,16 +546,6 @@ int main(int argc, char **argv) {
             number_gens++;
  
             stable_sort (species.begin(), species.end(), sorting_rule);
-            
-            number_core_species = 0;
-
-	    for (int j = 0; j < species.size(); j++){
-	      if (double(species[j].population)/double(species[0].population) >= 0.05){
-		number_core_species++;
-
-	      }
-
-	    }
 
     	  double reflected = 0.0;
     	  double insulated = 0.0;
