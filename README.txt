@@ -1,4 +1,4 @@
-To the code requires 4 integer arguments:
+To run the code it requires 4 integer arguments:
 1. determines the insulating / reflecting properties of the chemical set
 2. wires the geochemistry
 3. initialises microbe metabolisms 
