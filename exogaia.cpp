@@ -406,7 +406,7 @@ int main(int argc, char **argv) {
     //***** SPECIES VARIABLES ********
     vector < microbe > species; 
     int total_population = initial_population;
-    int average_biomass;
+    double average_biomass;
     int i_biomass;
     double species_nutrient_avg;
     double species_biomass_avg;
@@ -688,7 +688,7 @@ int main(int argc, char **argv) {
 
 	  // death event starvation
 	  average_biomass = species[i].biomass/(1.0*species[i].population);
-	  normal_distribution<double> biomass_dist( average_biomass, species_biomass_avg*0.01 ); // distribution of biomass in population
+	  normal_distribution<double> biomass_dist( average_biomass, average_biomass*0.01 ); // distribution of biomass in population
 	  i_biomass = floor(biomass_dist(generator));
 
 	  if (i_biomass <= starve_thresh) {
