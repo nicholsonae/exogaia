@@ -107,55 +107,6 @@ vector < vector <int> > nutrient_genome_interactions(int genome_length, int num_
 
 
 
-//************* CALCULATE NUTRIENT DEMAND **********
-
-vector <int> nutrient_demand_calc (vector <microbe> &species, double abiotic_T, double prefered_abiotic, int num_nutrients, double abiotic_scaling, vector< vector<int> > &n_g_interacts, int max_consumption) {
-
-  
-  double factor_i = abiotic_scaling*sqrt(pow(abiotic_T - prefered_abiotic, 2.0));
-  
-  double satisfaction = exp (-1.0*pow(factor_i,2.0));
-
-  int total_demand;
-  int i_demand;
-
-  vector <int> nutrient_dem(num_nutrients,0);
-
-  for (int j = 0; j < species.size(); j++) {
-    total_demand = 0;
-
-    for (int k = 0; k < num_nutrients; k++) {
-      total_demand += n_g_interacts[species[j].genome][k];
-
-    }
-
-    if (total_demand <= floor(max_consumption * satisfaction) && total_demand > 0 ){
-
-      i_demand = total_demand;
-      
-      while (total_demand + i_demand <= floor(max_consumption*satisfaction)){
-	
-	total_demand += i_demand;
-
-      }
-	
-      while (total_demand > 0) {
-	for (int l = 0; l < num_nutrients; l++) {
-	  
-	  nutrient_dem[l] += n_g_interacts[species[j].genome][l] * species[j].population;
-	}
-	
-	total_demand -= i_demand;
-      }
-      
-    }
-  }
-  
-  return nutrient_dem;
-  
-}
-
-
 //************ CREATE GEOLOGICAL LINKS  **************
 
 vector < vector <double> >  environment_setup_links(double num_nutrients, double link_probability) {
@@ -347,37 +298,37 @@ int main(int argc, char **argv) {
     
     
     //***** MICROBE PARAMETERS*****
-    int i;  // this is a marker for chosing and individual
-    const int initial_population = 100;
-    const int genome_length = 8;
-    const int reproduction_thresh = 120; // biomass threashold to reproduce
-    const int starve_thresh = 50; // if somethings biomass drops below this, it dies
+    int i;                                        // this is a marker for chosing and individual
+    const int initial_population = 100;           // initial population
+    const int genome_length = 8;                  // length of genes in genome, each gene can be either '0' or '1'
+    const int reproduction_thresh = 120;          // biomass threashold to reproduce
+    const int starve_thresh = 50;                 // if somethings biomass drops below this, it dies
     const int max_consumption = 10;
-    const double nutrient_conversion_eff = 0.6; // efficiency of microbe conversion
-    const int maintainence_cost = 1; // how much biomass it costs per timestep to live
-    const double p_mut = 0.01; // probability per gene of mutation in reproduction event
-    const double p_kill = 0.002;
-    const double prefered_abiotic = 1000.0; //abstract temperature
-    const bool reseed_on = false; // reseed with life after extinction?
+    const double nutrient_conversion_eff = 0.6;   // efficiency of microbe metabolism
+    const int maintainence_cost = 1;              // how much biomass it costs per timestep to live
+    const double p_mut = 0.01;                    // probability per gene of mutation in reproduction event
+    const double p_kill = 0.002;                  // probability of dead due to causes other than starvation
+    const double prefered_abiotic = 1000.0;       // abstract temperature
+    const bool reseed_on = false;                 // reseed with life after extinction?
     
     
     //***** ENVIRONMENT PARAMETERS *******
-    const int num_nutrients = 8;  
-    const int num_source = 2;  // This will break if larger than num_nutrients.. so don't
-    const double percentage_outflow = 0.0001; // to calculate outflow
-    const int max_nutrient_inflow = 75; //per source node
-    const double abiotic_start = 500.0;// if start and end are different, world wil gradually warm/cool
+    const int num_nutrients = 8;                  // number of different types of nutrients in system
+    const int num_source = 2;                     // number of nutrients with influx. Must be <= num_nutrients!
+    const double percentage_outflow = 0.0001;     // to calculate outflow
+    const int max_nutrient_inflow = 75;           // per source node
+    const double abiotic_start = 500.0;           // incoming heat from 'sun'. If start and end are different, world wil gradually warm/cool
     const double abiotic_end = 500.0;
-    double abiotic_env = abiotic_start; // starting environmental temperature
-    double abiotic_trickle = 0;
-    double abiotic_prob = 1.0; // probability of heating / cooling for each node (chemical species)
+    double abiotic_env = abiotic_start;           // starting environmental temperature
+    double abiotic_trickle = 0;                   // used to update environment between timestep iterations
+    double abiotic_prob = 1.0;                    // probability of heating / cooling for each node (chemical species)
 
     //***** RANDOM NUMBER GENERATORS ****
-    int t1 = atoi(argv[1]); // number to initialise the chemical set (heating / cooling properties)
+    int t1 = atoi(argv[1]);                       // number to initialise the chemical set (heating / cooling properties)
     srand48 (t1);
     mt19937 rng(t1);
     default_random_engine generator;
-    generator.seed(t1);  //provide seed for randomness in different runs
+    generator.seed(t1);                           // provide seed for randomness in different runs
     
     vector < double > node_abiotic = ab_nodes(num_nutrients, abiotic_prob); // abiotic affect of the nodes
     vector < double > influx_nodes = create_nodes(num_nutrients, num_source, max_nutrient_inflow);
@@ -385,18 +336,18 @@ int main(int argc, char **argv) {
     vector<double> environment(num_nutrients, 0);
     vector<double> nutrient_trickle(num_nutrients,0);
 
-    int t2 = atoi(argv[2]); // number to initialise geochemistry (links)
+    int t2 = atoi(argv[2]);                      // number to initialise geochemistry (links)
     srand48 (t2);
     generator.seed(t2); 
     
-    const double link_probability = 0.4; //how likely for two nodes to be connected
+    const double link_probability = 0.4;         // how likely for two nodes to be connected
     vector< vector<double> > geological_links = environment_setup_links(num_nutrients, link_probability);    
 
 
     //***** RANDOM NUMBER GENERATORS ****
-    int t = atoi(argv[3]);  //number to initialise microbe metabolisms
+    int t = atoi(argv[3]);  // number to initialise microbe metabolisms
     srand48 (t);
-    generator.seed(t);  //provide seed for randomness in different runs
+    generator.seed(t);      // provide seed for randomness in different runs
 
     
     
@@ -432,22 +383,20 @@ int main(int argc, char **argv) {
     int timestep_length = total_population; // timestep iterations determined by total population
     int number_gens = 0;
     int timestep_counter = 0;
-    int max_timesteps = 50*pow(10,4);
-    int init_period = 5*pow(10,4);
+    int max_timesteps = 50*pow(10,4);       // max length of experiment
+    int init_period = 5*pow(10,4);          // after this time has passed if habitable conditions haven't been reached, seed anyway
     int init_counter = 0;
-    int non_ideal = 1;
-    int death = 0;
-    
+    int non_ideal = 1;                      // switches to 0 when environment is ideal and life can be seeded
     
     // DATA FILES
     int file_num = atoi(argv[4]); // data file number
-    ofstream macro_data ("exogaia_macro_data_"+to_string(file_num)+".txt");  // macro properties - total pop, temp, etc
-    ofstream pop_data ("exogaia_pop_data_"+to_string(file_num)+".txt");   // population of each species alive at timestep
-    ofstream nutrient_data ("exogaia_nutrient_data_"+to_string(file_num)+".txt"); // chemical species levels over time
-    ofstream genome_data ("exogaia_genome_data_"+to_string(file_num)+".txt");  // which genomes exist over time
+    ofstream macro_data ("exogaia_macro_data_"+to_string(file_num)+".txt");           // macro properties - total pop, temp, etc
+    ofstream pop_data ("exogaia_pop_data_"+to_string(file_num)+".txt");               // population of each species alive at timestep
+    ofstream nutrient_data ("exogaia_nutrient_data_"+to_string(file_num)+".txt");     // chemical species levels over time
+    ofstream genome_data ("exogaia_genome_data_"+to_string(file_num)+".txt");         // which genomes exist over time
     ofstream nutrient_genome ("exogaia_nutrient_genome_"+to_string(file_num)+".txt"); // chemicals being consumed at each timestep
-    ofstream waste_genome ("exogaia_waste_data_"+to_string(file_num)+".txt"); // chemicals being excreted over time
-    ofstream geological_net ("exogaia_geological_network_dat.txt");  // the geochemical network
+    ofstream waste_genome ("exogaia_waste_data_"+to_string(file_num)+".txt");         // chemicals being excreted over time
+    ofstream geological_net ("exogaia_geological_network_dat.txt");                   // the geochemical network
 
     for (int j = 0; j < num_nutrients; j++){
       geological_net << influx_nodes[j] << " ";
@@ -595,10 +544,6 @@ int main(int argc, char **argv) {
 	    nutrient_genome << endl;
 	    waste_genome << endl;
 
-	    vector < int > nutrient_d = nutrient_demand_calc (species, abiotic_T, prefered_abiotic, num_nutrients, abiotic_scaling, n_g_interacts, max_consumption);
-
-
-
 	    nutrient_data << number_gens;
 	    
 	    for (int j = 0; j < num_nutrients; j++) {
@@ -682,7 +627,6 @@ int main(int argc, char **argv) {
         // AS USING WHEN CALCUATING IF INDIVIDUALS REPRODUCE
 
         i = chooseAgent(species, total_population);
-	death = 0; // not a death run yet..
 
         if (i > -1) {
 
@@ -691,27 +635,31 @@ int main(int argc, char **argv) {
 	  normal_distribution<double> biomass_dist( average_biomass, average_biomass*0.01 ); // distribution of biomass in population
 	  i_biomass = floor(biomass_dist(generator));
 
+	  species_nutrient_avg = 1.0*species[i].nutrient/species[i].population;
+	  normal_distribution<double> nutrient_species_dist( species_nutrient_avg, species_nutrient_avg*0.1);
+	  nutrient_available = floor(nutrient_species_dist(generator)); // we'll just round down as can't use half a nutrient
+
 	  if (i_biomass <= starve_thresh) {
-	     death = 1;
             // so if the biomass count is low, the above will be high so high prob of death
 
             species[i].population--;
-            species[i].biomass -= i_biomass; // remove biomass of dead microbe THINK ABOUT THIS
+            species[i].biomass -= i_biomass;           // remove biomass of dead microbe
+	    species[i].nutrient -= nutrient_available; // remove the undigested food of the dead microbe
             total_population--;
-            if (species[i].biomass < 1) { species[i].biomass = 0; species[i].population = 0; } //THINK ABOUT THIS TOO
+            if (species[i].biomass < 1) { species[i].biomass = 0; species[i].population = 0; } // if there is no biomass, extinct
             if (species[i].population == 0){
-	      species.erase(species.begin() + i); // remove from list if extinct
+	      species.erase(species.begin() + i);      // remove from list if extinct
 
             }
 	  }
 
-	  else if (drand48() <= p_kill && species[i].population > 0) {
-	    death = 1;            
+	  else if (drand48() <= p_kill && species[i].population > 0) {            
             species[i].population--;
-            species[i].biomass -= i_biomass; // remove biomass of dead microbe
+            species[i].biomass -= i_biomass;           // remove biomass of dead microbe
+	    species[i].nutrient -= nutrient_available; // remove the undigested food of the dead microbe
             total_population--;
             if (species[i].population == 0){
-	      species.erase(species.begin() + i); // remove from species list if extinct
+	      species.erase(species.begin() + i);      // remove from species list if extinct
             }
 
 	  }
@@ -723,7 +671,7 @@ int main(int argc, char **argv) {
          ********************************************************************************/
         i = chooseAgent(species, total_population);
 	
-        if (i > -1 && death == 0) {
+        if (i > -1) {
 	  species[i].biomass--;
 	}
 
@@ -734,7 +682,7 @@ int main(int argc, char **argv) {
         // metabolism event
         i = chooseAgent(species, total_population);
 	
-	if( i > -1 && death == 0) {
+	if( i > -1) {
 	  
 	  factor_i = abiotic_scaling*sqrt(pow(abiotic_T - prefered_abiotic, 2.0));
 	  satisfaction = exp (-1.0*pow(factor_i,2.0));
@@ -762,12 +710,12 @@ int main(int argc, char **argv) {
 
         i = chooseAgent(species, total_population);
 
-	if (i > -1 && death == 0){
+	if (i > -1){
 
 	  species_nutrient_avg = 1.0*species[i].nutrient/species[i].population;
 
 	  normal_distribution<double> nutrient_species_dist( species_nutrient_avg, species_nutrient_avg*0.1);
-	  nutrient_available = floor(nutrient_species_dist(generator)); // we'll just round down as can't use half a biomass
+	  nutrient_available = floor(nutrient_species_dist(generator)); // we'll just round down as can't use half a nutrient
 
 	  while ( nutrient_available >= 5) { 
            
@@ -785,7 +733,7 @@ int main(int argc, char **argv) {
 	 **********************************************************************************/
 
         i = chooseAgent(species, total_population);
-	if (i > -1 && death == 0){
+	if (i > -1){
 
 	  double species_waste_avg = 1.0*species[i].waste/species[i].population;
 	  normal_distribution<double> waste_species_dist( species_waste_avg, species_waste_avg*0.1);
@@ -822,7 +770,7 @@ int main(int argc, char **argv) {
 
         i = chooseAgent(species, total_population);
 
-        if (i > -1 && death == 0){
+        if (i > -1){
         
 	  species_biomass_avg = (1.0*species[i].biomass)/species[i].population; // average biomass per indiviual
         
