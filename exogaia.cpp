@@ -349,6 +349,7 @@ int main(int argc, char **argv) {
     int init_period = 5*pow(10,4);          // after this time has passed if habitable conditions haven't been reached, seed anyway
     int init_counter = 0;                   // for tracking time before life is seeded
     int non_ideal = 1;                      // switches to 0 when environment is ideal and life can be seeded
+    int death_iteration = 0; 		    // if a microbe dies at the start of iteration, skip to next iteration (a dead microbe can't eat etc)
     
     // DATA FILES
     int file_num = atoi(argv[4]);                                                     // data file number
@@ -589,6 +590,9 @@ int main(int argc, char **argv) {
 
         i = chooseAgent(species, total_population);
 
+	death_iteration = 0; // Reset at start of each iteration. Becomes 1 if chosen microbe at start of iteration dies
+			     // If a microbe dies it cannot eat / reproduce etc therefore there is one less possible eating etc event 
+			     // within the current timestep
         if (i > -1) {
 
 	  // death event starvation
@@ -612,6 +616,7 @@ int main(int argc, char **argv) {
 	      species.erase(species.begin() + i);      // remove species from list if extinct
 
             }
+	    death_iteration = 1;
 	  }
 
 	  else if (drand48() <= p_kill && species[i].population > 0) {            
@@ -622,7 +627,7 @@ int main(int argc, char **argv) {
             if (species[i].population == 0){
 	      species.erase(species.begin() + i);      // remove from species list if extinct
             }
-
+	    death_iteration = 1;
 	  }
 	}
 
@@ -632,7 +637,7 @@ int main(int argc, char **argv) {
          ********************************************************************************/
         i = chooseAgent(species, total_population);
 	
-        if (i > -1) {
+        if (i > -1 && death_iteration == 0) {
 	  species[i].biomass--;
 	}
 
@@ -643,7 +648,7 @@ int main(int argc, char **argv) {
         // metabolism event
         i = chooseAgent(species, total_population);
 	
-	if( i > -1) {
+	if( i > -1 && death_iteration == 0) {
 	  
 	  factor_i = abiotic_scaling*sqrt(pow(abiotic_T - prefered_abiotic, 2.0));
 	  satisfaction = exp (-1.0*pow(factor_i,2.0));
@@ -671,7 +676,7 @@ int main(int argc, char **argv) {
 
         i = chooseAgent(species, total_population);
 
-	if (i > -1){
+	if (i > -1 && death_iteration == 0){
 
 	  species_nutrient_avg = 1.0*species[i].nutrient/species[i].population;
 
@@ -694,7 +699,7 @@ int main(int argc, char **argv) {
 	 **********************************************************************************/
 
         i = chooseAgent(species, total_population);
-	if (i > -1){
+	if (i > -1 && death_iteration == 0){
 
 	  double species_waste_avg = 1.0*species[i].waste/species[i].population;
 	  normal_distribution<double> waste_species_dist( species_waste_avg, species_waste_avg*0.1);
@@ -722,7 +727,7 @@ int main(int argc, char **argv) {
 
         i = chooseAgent(species, total_population);
 
-        if (i > -1){
+        if (i > -1 && death_iteration == 0){
         
 	  species_biomass_avg = (1.0*species[i].biomass)/species[i].population; // average biomass per indiviual
         
