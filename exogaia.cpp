@@ -51,7 +51,7 @@ int chooseAgent(vector< microbe > &species, int p) {
         
     }
     
-    return -1; // this should never happen 
+    return -1; // happens if life goes extinct
     
 }
 
@@ -298,11 +298,11 @@ int main(int argc, char **argv) {
     vector<double> environment(num_nutrients, 0);     // initally no chemicals in 'atmosphere'
     vector<double> nutrient_trickle(num_nutrients,0); // for updating environment in between iterations
 
-    int t2 = atoi(argv[2]);                        // number to initialise geochemistry (links)
+    int t2 = atoi(argv[2]);                           // number to initialise geochemistry (links)
     srand48 (t2);
     generator.seed(t2); 
     
-    const double link_probability = 0.4;           // how likely for two nodes to be connected
+    const double link_probability = 0.4;              // how likely for two nodes to be connected
     vector< vector<double> > geological_links = environment_setup_links(num_nutrients, link_probability);    
 
 
@@ -325,7 +325,7 @@ int main(int argc, char **argv) {
     double species_biomass_avg;
     int nutrient_available;
     const double abiotic_scaling = 0.015; // microbe sensitivity to temperature
-    double satisfaction;
+    double satisfaction;                  // a measure of how 'fit' the microbes are in their current environment
     double factor_i;
     microbe temp_mutant;
     int did_we_mutate = 0;
@@ -342,16 +342,16 @@ int main(int argc, char **argv) {
 
     
     // VARIABLES FOR KEEPING TRACK OF TIME
-    int timestep_length = total_population; // timestep iterations determined by total population
-    int number_gens = 0;
-    int timestep_counter = 0;
+    int timestep_length = total_population; // number of timestep iterations determined by total population at start of timestep
+    int number_gens = 0;                    // number of timesteps that have passed
+    int timestep_counter = 0;               // for counting iterations within a timestep
     int max_timesteps = 50*pow(10,4);       // max length of experiment
     int init_period = 5*pow(10,4);          // after this time has passed if habitable conditions haven't been reached, seed anyway
-    int init_counter = 0;
+    int init_counter = 0;                   // for tracking time before life is seeded
     int non_ideal = 1;                      // switches to 0 when environment is ideal and life can be seeded
     
     // DATA FILES
-    int file_num = atoi(argv[4]); // data file number
+    int file_num = atoi(argv[4]);                                                     // data file number
     ofstream macro_data ("exogaia_macro_data_"+to_string(file_num)+".txt");           // macro properties - total pop, temp, etc
     ofstream pop_data ("exogaia_pop_data_"+to_string(file_num)+".txt");               // population of each species alive at timestep
     ofstream nutrient_data ("exogaia_nutrient_data_"+to_string(file_num)+".txt");     // chemical species levels over time
@@ -391,7 +391,6 @@ int main(int argc, char **argv) {
       // only update the flow once every time step       
       // nutrient outflow
 
-
       abiotic_trickle = update_abiotic(environment, num_nutrients, node_abiotic, abiotic_env, abiotic_T);
       abiotic_T += abiotic_trickle; 
       nutrient_trickle = update_environment(environment, num_nutrients, percentage_outflow, geological_links, influx_nodes);
@@ -404,13 +403,13 @@ int main(int argc, char **argv) {
 	abiotic_trickle = 0;
 	
        
-	if (abiotic_T >= 1000 && abiotic_T <= 1050) { // seeding window
+	if (abiotic_T >= 1000 && abiotic_T <= 1050) {      // seeding window
 		for (int k = 0; k < num_nutrients; k++){
 			if (environment[k] > 1000) {
-				 non_ideal = 0;      // environment is suitable for seeding with life
+				 non_ideal = 0;            // environment is suitable for seeding with life
 			}
 		}
-	} // seed once reach ideal 
+	} // seed once conditions are habitable for life 
       init_counter++;
 
     	  double reflected = 0.0;
@@ -587,8 +586,6 @@ int main(int argc, char **argv) {
          ********************************************************************************/
         
         // NEED TO REMOVE BIOMASS WHEN AN INDIVIDUAL DIES
-        // USE SAME DISTRIBUTION TO CALCULATE BIOMASS TO REMOVE
-        // AS USING WHEN CALCUATING IF INDIVIDUALS REPRODUCE
 
         i = chooseAgent(species, total_population);
 
@@ -604,7 +601,7 @@ int main(int argc, char **argv) {
 	  nutrient_available = floor(nutrient_species_dist(generator)); // we'll just round down as can't use half a nutrient
 
 	  if (i_biomass <= starve_thresh) {
-            // so if the biomass count is low, the above will be high so high prob of death
+            // dies if biomass lower than starvation threshold 
 
             species[i].population--;
             species[i].biomass -= i_biomass;           // remove biomass of dead microbe
@@ -612,7 +609,7 @@ int main(int argc, char **argv) {
             total_population--;
             if (species[i].biomass < 1) { species[i].biomass = 0; species[i].population = 0; } // if there is no biomass, extinct
             if (species[i].population == 0){
-	      species.erase(species.begin() + i);      // remove from list if extinct
+	      species.erase(species.begin() + i);      // remove species from list if extinct
 
             }
 	  }
@@ -656,7 +653,7 @@ int main(int argc, char **argv) {
 	  int nut_num;
 	  for (int k = 0; k < num_nutrients; k++) {
 
-	    if (n_g_interacts[species[i].genome][k] > 0) { nut_num = k;  }
+	    if (n_g_interacts[species[i].genome][k] > 0) { nut_num = k;  } // which nutrient / chemical species does this microbe eat?
 	  }
 
 	  double total_count_eat = max_consumption * satisfaction;
@@ -664,7 +661,7 @@ int main(int argc, char **argv) {
 	 environment[nut_num] -= total_count_eat;
 	 species[i].nutrient += total_count_eat;
 
-	 if (environment[nut_num] < 0) { cout << "NUTRIENT EATING PROBLEM" << endl; }
+	 if (environment[nut_num] < 0) { cout << "NUTRIENT EATING PROBLEM" << endl; } // bug check - has never happened
 
 	}
 	
