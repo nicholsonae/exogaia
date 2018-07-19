@@ -702,22 +702,13 @@ int main(int argc, char **argv) {
 
 	  if (waste_available > species[i].waste) { waste_available = species[i].waste; }
 
-	  int waste_count = 0;
 	  for (int k = 0; k < num_nutrients; k++) {
 
-	    waste_count += n_g_interacts[species[i].genome][k+num_nutrients];
+		if (n_g_interacts[species[i].genome][k+num_nutrients] > 0) {  // microbe excretes this chemical species as waste
 
-	  }
-
-	  while (species[i].waste >= waste_count && species[i].waste > 0) {  
-
-	    for (int k = 0; k < num_nutrients; k++) {
-
-	      species[i].waste -=  n_g_interacts[species[i].genome][k+num_nutrients];
-	      environment[k] +=  n_g_interacts[species[i].genome][k+num_nutrients];
-
-	    }
-
+			species[i].waste -= waste_available;
+			environment[k] += waste_available;
+		}
 	  }
 
 	}
