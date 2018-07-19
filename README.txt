@@ -11,6 +11,10 @@ For the data in the paper the numbers corresponding to each chemical set:
 - chemical set D - 920
 - chemical set E - 720
 
+e.g. example run:
+
+./exogaia 120 1234564 1234560 0 &
+
 The parameter link_probability determines the connectivity of the geochemical network (between 0 and 1)
 
 The most important data file it spits out is the exogaia_macro_data one which contains: 
