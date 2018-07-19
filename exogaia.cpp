@@ -213,54 +213,14 @@ vector <double> update_environment(vector <double> &environment, int num_nutrien
   
 }
 
-//************* SET UP POPULATION *********************
-int setup_population(vector< microbe > &species, int  genome_length, int initial_population){
-    
-    int total_population = 0;
-    
-    microbe new_microbe;    
-    
-     for (int j = 0; j < initial_population; j++) {
 
-      int genome_new = floor(drand48()*pow(2,genome_length)); // randomly generate microbes
-      int already_exists = 0;
-      for (int k = 0; k < species.size(); k++){
-
-	if (genome_new == species[k].genome) {
-	  species[k].population++;
-	  species[k].biomass += 80;
-	  already_exists = 1;
-	}
-
-	
-      }
-      
-      if (already_exists == 0) {
-	new_microbe.population = 1;
-        new_microbe.genome = genome_new;
-        new_microbe.nutrient = 0;
-        new_microbe.biomass = 80;
-	new_microbe.waste = 0;
-	species.push_back(new_microbe);
-      }
-
-      total_population++;
-      
-    }
-
-     if(total_population != initial_population) {cout << "POPULATION  BUG" << endl;}
-
-     return 0;
-
-}
-
-
+// ************* SET UP INFLUX NODES / CHEMICAL SPECIES **************************
 vector < double > create_nodes(int num_nutrients, int num_source, int max_nutrient_inflow){
   
   vector < double > influx_nodes (num_nutrients, 0);
  
   
-  for (int j = 0; j < num_source; j++){  // create the sources randomly
+  for (int j = 0; j < num_source; j++){  // create the source nodes randomly
 
     int new_nut = 0;
     int loc_n = floor(drand48()*num_nutrients);
@@ -275,6 +235,8 @@ vector < double > create_nodes(int num_nutrients, int num_source, int max_nutrie
 
 }
 
+
+//***** SET UP INSULATING / REFLECTING PROPERTIES OF EACH CHEMICAL SPECIES ******
 vector < double > ab_nodes(int num_nutrients, double abiotic_prob){
 
   vector < double > node_abiotic (num_nutrients, 0);
@@ -471,7 +433,7 @@ int main(int argc, char **argv) {
     //************************** SEED **************************************
 
 
-	int suit_metab = 0; // find a suitable metabolism
+	int suit_metab = 0; // find a suitable metabolism - food suitable for the species' metabolism must be available
 
 	while (suit_metab == 0) {
 		species[0].genome = floor(drand48()*pow(2,genome_length));
