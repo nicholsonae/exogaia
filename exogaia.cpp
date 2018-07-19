@@ -92,7 +92,7 @@ vector < vector <int> > nutrient_genome_interactions(int genome_length, int num_
       cons = floor(drand48()*num_nutrients);
       exc  = floor(drand48()*num_nutrients);
 
-      while (cons == exc) { exc = floor( drand48()*num_nutrients ); }
+      while (cons == exc) { exc = floor( drand48()*num_nutrients ); } // canot eat and excrete the same chemical species / nutrient
 
       cons_ex_vector[cons]  = 1;
       cons_ex_vector[exc+num_nutrients] = 1;
