@@ -471,11 +471,6 @@ int main(int argc, char **argv) {
 	if (reflected > 100) { reflected = 100; }
       	if (insulated > 100) { insulated = 100; }
 
-	  factor_i = abiotic_scaling*sqrt(pow(abiotic_T - prefered_abiotic, 2.0));
-	  satisfaction = exp (-1.0*pow(factor_i,2.0));
-
-	  int total_count_eat = floor(max_consumption * satisfaction);
-
             // Record data here!!!!!
             macro_data << number_gens+init_counter << " " << total_population << " " << species[0].population << " " << species.size() << " " << abiotic_T << " " << insulated << " " << reflected <<  endl;
 
