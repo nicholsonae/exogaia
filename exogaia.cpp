@@ -303,7 +303,7 @@ int main(int argc, char **argv) {
     const int genome_length = 8;                  // length of genes in genome, each gene can be either '0' or '1'
     const int reproduction_thresh = 120;          // biomass threashold to reproduce
     const int starve_thresh = 50;                 // if somethings biomass drops below this, it dies
-    const int max_consumption = 10;
+    const int max_consumption = 10;               // maximum number of nutrients a microbe can eat at once
     const double nutrient_conversion_eff = 0.6;   // efficiency of microbe metabolism
     const int maintainence_cost = 1;              // how much biomass it costs per timestep to live
     const double p_mut = 0.01;                    // probability per gene of mutation in reproduction event
@@ -313,7 +313,7 @@ int main(int argc, char **argv) {
     
     
     //***** ENVIRONMENT PARAMETERS *******
-    const int num_nutrients = 8;                  // number of different types of nutrients in system
+    const int num_nutrients = 8;                  // number of different types of nutrients/chemicals in system
     const int num_source = 2;                     // number of nutrients with influx. Must be <= num_nutrients!
     const double percentage_outflow = 0.0001;     // to calculate outflow
     const int max_nutrient_inflow = 75;           // per source node
@@ -332,15 +332,15 @@ int main(int argc, char **argv) {
     
     vector < double > node_abiotic = ab_nodes(num_nutrients, abiotic_prob); // abiotic affect of the nodes
     vector < double > influx_nodes = create_nodes(num_nutrients, num_source, max_nutrient_inflow);
-    double abiotic_T = abiotic_start;
-    vector<double> environment(num_nutrients, 0);
-    vector<double> nutrient_trickle(num_nutrients,0);
+    double abiotic_T = abiotic_start;                 // set initial temperature to the start temperature
+    vector<double> environment(num_nutrients, 0);     // initally no chemicals in 'atmosphere'
+    vector<double> nutrient_trickle(num_nutrients,0); // for updating environment in between iterations
 
-    int t2 = atoi(argv[2]);                      // number to initialise geochemistry (links)
+    int t2 = atoi(argv[2]);                        // number to initialise geochemistry (links)
     srand48 (t2);
     generator.seed(t2); 
     
-    const double link_probability = 0.4;         // how likely for two nodes to be connected
+    const double link_probability = 0.4;           // how likely for two nodes to be connected
     vector< vector<double> > geological_links = environment_setup_links(num_nutrients, link_probability);    
 
 
@@ -369,14 +369,14 @@ int main(int argc, char **argv) {
     int did_we_mutate = 0;
 
 
-     int genome_new = floor(drand48()*pow(2,genome_length)); // randomly generate microbes
-     microbe new_microbe;
-     new_microbe.population = initial_population;
-     new_microbe.genome = genome_new;
-     new_microbe.nutrient = 0;
-     new_microbe.biomass = 80*initial_population;
-     new_microbe.waste = 0;
-     species.push_back(new_microbe);
+    int genome_new = floor(drand48()*pow(2,genome_length)); // randomly generate microbes
+    microbe new_microbe;
+    new_microbe.population = initial_population;
+    new_microbe.genome = genome_new;
+    new_microbe.nutrient = 0;
+    new_microbe.biomass = 80*initial_population;
+    new_microbe.waste = 0;
+    species.push_back(new_microbe);
 
     
     // VARIABLES FOR KEEPING TRACK OF TIME
@@ -445,7 +445,7 @@ int main(int argc, char **argv) {
 	if (abiotic_T >= 1000 && abiotic_T <= 1050) { // seeding window
 		for (int k = 0; k < num_nutrients; k++){
 			if (environment[k] > 1000) {
-				 non_ideal = 0; 
+				 non_ideal = 0;      // environment is suitable for seeding with life
 			}
 		}
 	} // seed once reach ideal 
@@ -590,9 +590,11 @@ int main(int argc, char **argv) {
 	    abiotic_T += abiotic_trickle; 
 
 
+        /*********************************************************************************
+                 RESEED IF PLANET IS EXTINCT (Only happens if reseed_on == True)
+        *********************************************************************************/
 
-
-	if (abiotic_T >= 1000 && abiotic_T < 1050 && total_population == 0 && reseed_on){
+	if (abiotic_T >= 1000 && abiotic_T < 1050 && total_population == 0 && reseed_on){  
 
 	     int genome_news = floor(drand48()*pow(2,genome_length)); // randomly generate microbes
 	     microbe try_microbe;
@@ -602,9 +604,9 @@ int main(int argc, char **argv) {
 	     try_microbe.biomass = 80*initial_population;
 	     try_microbe.waste = 0;
 	     species.push_back(try_microbe);
-	     total_population += initial_population;
+	     total_population = initial_population;
 
-              	int suit_metab = 0; // find a suitable metabolism
+              	int suit_metab = 0; // find a suitable metabolism for current environment
 	
 		while (suit_metab == 0) {
 			species[0].genome = floor(drand48()*pow(2,genome_length));
